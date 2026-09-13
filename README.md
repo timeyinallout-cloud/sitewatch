@@ -60,6 +60,14 @@ Actions run's own screenshots (download the `sitewatch-report` build
 artifact, point `sitewatch accept --reports-dir <downloaded dir>` at it),
 not a local `sitewatch run`.
 
+Since that's a download to a different machine than the one that produced
+it, `sitewatch accept --show-fingerprints` prints a short spoken/readable
+[odu-core](https://pypi.org/project/odu-core/) fingerprint per accepted
+file -- four Odù figures, quick to compare or paste, that confirm what you
+just copied is actually the file CI produced rather than a truncated or
+stale download. This catches accidents, not tampering -- it's not a
+security check, just a "did the download finish" sanity check.
+
 ## Dashboard
 
 Every `sitewatch run` regenerates `index.html` at the repo root and appends

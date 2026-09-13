@@ -13,6 +13,12 @@ dependencies = [
     "playwright>=1.45",
     "pillow>=10.3",
     "jinja2>=3.1",
+    # Spoken/readable fingerprints for `sitewatch accept` -- confirms a
+    # baseline promoted from a downloaded CI artifact is actually the file
+    # CI produced (a truncated download, a stale re-download), not a
+    # security/tamper-detection tool. See odu_core.fingerprint's own
+    # docstring for why that boundary matters.
+    "odu-core>=1.0",
 ]
 
 [project.optional-dependencies]

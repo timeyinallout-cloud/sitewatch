@@ -77,9 +77,12 @@ def _cmd_accept(args: argparse.Namespace) -> int:
             print(f"No such run: {run_dir}", file=sys.stderr)
             return 1
 
-    count = accept_baseline(run_dir, baseline_dir, site_slug=args.site)
-    print(f"Accepted {count} screenshot(s) from {run_dir.name} as new baseline"
+    accepted = accept_baseline(run_dir, baseline_dir, site_slug=args.site)
+    print(f"Accepted {len(accepted)} screenshot(s) from {run_dir.name} as new baseline"
           f"{f' for {args.site}' if args.site else ''}.")
+    if args.show_fingerprints:
+        for a in accepted:
+            print(f"  {a.relative_path}: {a.fingerprint}")
     return 0
 
 
@@ -108,6 +111,10 @@ def build_parser() -> argparse.ArgumentParser:
                                help="Promote a run's screenshots to the new baseline.")
     accept_p.add_argument("run", nargs="?", default="latest", help="Run id, or 'latest' (default).")
     accept_p.add_argument("--site", default=None, help="Limit to one site slug.")
+    accept_p.add_argument("--show-fingerprints", action="store_true",
+                           help="Print a spoken/readable fingerprint per accepted file -- "
+                                "useful after downloading a CI run artifact, to confirm "
+                                "what you're accepting is actually what CI produced.")
     accept_p.set_defaults(func=_cmd_accept)
 
     return parser

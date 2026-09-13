@@ -17,8 +17,8 @@ def _make_run(tmp_path: Path) -> Path:
 def test_accept_copies_screenshots_not_diffs(tmp_path):
     run_dir = _make_run(tmp_path)
     baseline_dir = tmp_path / "baselines"
-    count = accept_baseline(run_dir, baseline_dir)
-    assert count == 1
+    accepted = accept_baseline(run_dir, baseline_dir)
+    assert len(accepted) == 1
     assert (baseline_dir / "mysite" / "root.png").exists()
     assert not (baseline_dir / "mysite" / "root.diff.png").exists()
 
@@ -30,6 +30,36 @@ def test_accept_can_scope_to_one_site(tmp_path):
     Image.new("RGB", (10, 10)).save(other_site / "root.png")
 
     baseline_dir = tmp_path / "baselines"
-    count = accept_baseline(run_dir, baseline_dir, site_slug="mysite")
-    assert count == 1
+    accepted = accept_baseline(run_dir, baseline_dir, site_slug="mysite")
+    assert len(accepted) == 1
     assert not (baseline_dir / "othersite").exists()
+
+
+def test_accept_reports_relative_path_and_fingerprint(tmp_path):
+    run_dir = _make_run(tmp_path)
+    baseline_dir = tmp_path / "baselines"
+    accepted = accept_baseline(run_dir, baseline_dir)
+    assert accepted[0].relative_path == "mysite/root.png"
+    assert accepted[0].fingerprint  # non-empty string
+    assert "-" in accepted[0].fingerprint or " " not in accepted[0].fingerprint  # slug style
+
+
+def test_accept_fingerprint_matches_the_copied_bytes(tmp_path):
+    from odu_core.fingerprint import say
+
+    run_dir = _make_run(tmp_path)
+    baseline_dir = tmp_path / "baselines"
+    accepted = accept_baseline(run_dir, baseline_dir)
+    copied = baseline_dir / accepted[0].relative_path
+    assert accepted[0].fingerprint == say(copied, style="slug")
+
+
+def test_accept_fingerprint_differs_for_different_content(tmp_path):
+    run_dir = _make_run(tmp_path)
+    site_dir = run_dir / "mysite"
+    Image.new("RGB", (10, 10), (9, 9, 9)).save(site_dir / "about.png")
+
+    baseline_dir = tmp_path / "baselines"
+    accepted = accept_baseline(run_dir, baseline_dir)
+    by_name = {a.relative_path: a.fingerprint for a in accepted}
+    assert by_name["mysite/root.png"] != by_name["mysite/about.png"]

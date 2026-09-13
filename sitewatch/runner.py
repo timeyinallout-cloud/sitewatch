@@ -71,13 +71,30 @@ def run_all(sites: list[Site], reports_root: Path, baseline_dir: Path,
     return run_dir, reports
 
 
-def accept_baseline(run_dir: Path, baseline_dir: Path, site_slug: str | None = None) -> int:
+@dataclass
+class AcceptedFile:
+    relative_path: str  # "<site_slug>/<page_slug>.png"
+    fingerprint: str     # spoken/readable phrase, slug style
+
+
+def accept_baseline(run_dir: Path, baseline_dir: Path,
+                     site_slug: str | None = None) -> list[AcceptedFile]:
     """Copy this run's screenshots into the baseline dir, making the current
     state the new "known good". Scope to one site, or all sites in the run
-    if `site_slug` is None. Returns the number of images accepted."""
+    if `site_slug` is None. Returns one entry per accepted image.
+
+    Each entry carries a spoken/readable fingerprint of the copied file --
+    useful when the run being accepted from was downloaded (a CI artifact
+    pulled to a different machine than the one running `accept`), so you can
+    confirm what you copied is actually what CI produced rather than a
+    truncated or stale download. This is accident-detection, not a
+    tamper/security check -- see odu_core.fingerprint's docstring.
+    """
     import shutil
 
-    count = 0
+    from odu_core.fingerprint import say
+
+    accepted: list[AcceptedFile] = []
     site_dirs = [d for d in run_dir.iterdir() if d.is_dir()] if run_dir.exists() else []
     for site_dir in site_dirs:
         if site_slug is not None and site_dir.name != site_slug:
@@ -87,6 +104,10 @@ def accept_baseline(run_dir: Path, baseline_dir: Path, site_slug: str | None = N
         for png in site_dir.glob("*.png"):
             if png.name.endswith(".diff.png"):
                 continue
-            shutil.copy2(png, dest / png.name)
-            count += 1
-    return count
+            dest_path = dest / png.name
+            shutil.copy2(png, dest_path)
+            accepted.append(AcceptedFile(
+                relative_path=f"{site_dir.name}/{png.name}",
+                fingerprint=say(dest_path, style="slug"),
+            ))
+    return accepted
