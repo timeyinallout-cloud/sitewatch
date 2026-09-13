@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 from sitewatch.config import load_sites
+from sitewatch.dashboard import render_dashboard
+from sitewatch.history import append_run, load_history
 from sitewatch.report import render
 from sitewatch.runner import accept_baseline, run_all
 
@@ -48,6 +50,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
     summary_lines += ["", f"Full report in the `report.html` build artifact."]
     (run_dir / "summary.md").write_text("\n".join(summary_lines) + "\n")
 
+    history_path = Path(args.history_file)
+    append_run(history_path, run_dir.name, site_reports)
+    dashboard_path = render_dashboard(
+        run_dir.name, site_reports, load_history(history_path), Path(args.dashboard_out))
+    print(f"dashboard: {dashboard_path}")
+
     if args.fail_on_issues and (total_broken or total_visual or total_failed):
         return 2
     return 0
@@ -90,6 +98,10 @@ def build_parser() -> argparse.ArgumentParser:
     run_p.add_argument("--max-depth", type=int, default=4)
     run_p.add_argument("--fail-on-issues", action="store_true",
                         help="Exit non-zero if anything was flagged (for CI).")
+    run_p.add_argument("--history-file", default="history.jsonl",
+                        help="Append this run's per-site stats here (for the dashboard trend).")
+    run_p.add_argument("--dashboard-out", default="index.html",
+                        help="Where to (re)write the standing dashboard page.")
     run_p.set_defaults(func=_cmd_run)
 
     accept_p = sub.add_parser("accept", parents=[common],

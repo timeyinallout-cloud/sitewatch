@@ -60,6 +60,19 @@ Actions run's own screenshots (download the `sitewatch-report` build
 artifact, point `sitewatch accept --reports-dir <downloaded dir>` at it),
 not a local `sitewatch run`.
 
+## Dashboard
+
+Every `sitewatch run` regenerates `index.html` at the repo root and appends
+one line per site to `history.jsonl` (`--dashboard-out` / `--history-file`
+to change where). It's a standing status page, not a one-off report: fleet
+summary at the top, one card per site with current status plus a small
+trend strip (green/amber/red per run, last 20 runs) so a slow creeping
+problem is visible even if no single run trips `--fail-on-issues`.
+
+In CI, this gets committed back to `main` after every scheduled sweep and
+served via GitHub Pages from the repo root -- the dashboard is always
+whatever the last sweep found, no manual publish step.
+
 ## Recurring sweep
 
 `.github/workflows/fleet-sweep.yml` runs the same check every Monday
