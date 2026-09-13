@@ -47,6 +47,13 @@ def capture(urls: list[str], out_dir: Path) -> dict[str, Path | None]:
             dest = out_dir / f"{page_slug(url)}.png"
             try:
                 page.goto(url, wait_until="networkidle")
+                # `networkidle` fires once requests are quiet, but a web font
+                # can still be swapping in after that -- screenshotting before
+                # it lands captures the fallback font's metrics, which reflows
+                # the whole page a few px taller/shorter and makes every run
+                # look like a false visual regression. Wait for the real thing.
+                page.evaluate("document.fonts.ready.then(() => true)")
+                page.wait_for_timeout(150)
                 page.screenshot(path=str(dest), full_page=True)
                 results[url] = dest
             except Exception:
