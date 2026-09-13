@@ -1,0 +1,17 @@
+# One entry per live public site. `sitewatch run` crawls each from its
+# homepage, same-host only, and screenshots every HTML page it finds.
+[[site]]
+name = "MatchScout"
+base_url = "https://matchscout.co.uk"
+
+[[site]]
+name = "StrategyAudit"
+base_url = "https://audit.tronk.co.uk"
+
+[[site]]
+name = "SignalMarketplace"
+base_url = "https://signals.tronk.co.uk"
+
+[[site]]
+name = "PrivacyScan"
+base_url = "https://privacyscan.co.uk"

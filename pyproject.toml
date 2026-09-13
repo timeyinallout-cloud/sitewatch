@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sitewatch"
+version = "0.1.0"
+description = "Crawl + link-check + visual-regression watch for the live site fleet (MatchScout, StrategyAudit, SignalMarketplace, PrivacyScan)."
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "playwright>=1.45",
+    "pillow>=10.3",
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+sitewatch = "sitewatch.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sitewatch*"]
