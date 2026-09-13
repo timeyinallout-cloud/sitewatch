@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sitewatch dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root {
+    --paper: #F6F5EF; --paper-2: #EDEAE0; --ink: #1A1D19; --ink-2: #585B52; --ink-3: #86887E;
+    --line: #DEDBCC; --line-2: #CBC7B4;
+    --accent: #14584E; --accent-2: #1F7A6C; --accent-wash: #E4EFEC;
+    --good: #1F6B3B; --good-bg: #E7F0E7;
+    --warn: #8A5A12; --warn-bg: #F4EDDA;
+    --bad:  #A23A31; --bad-bg:  #F4E4E1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141713; --paper-2: #1C1F1A; --ink: #ECEAE0; --ink-2: #ABAA9C; --ink-3: #74766B;
+      --line: #2B2E27; --line-2: #3A3D33;
+      --accent: #4FA695; --accent-2: #6FC0AF; --accent-wash: #17332D;
+      --good: #6FC68C; --good-bg: #16281D;
+      --warn: #D9AE6B; --warn-bg: #2A2113;
+      --bad:  #DE8B82; --bad-bg:  #2C1D1B;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: "Source Sans 3", system-ui, sans-serif;
+         font-size: 15.5px; line-height: 1.55; margin: 0; padding: 0 20px 5rem; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  .mono { font-family: "Space Mono", ui-monospace, monospace; }
+  h1, h2 { font-family: "Archivo", system-ui, sans-serif; }
+
+  header { padding: 3rem 0 2rem; border-bottom: 1px solid var(--line); }
+  .kicker { font-family: "Space Mono", monospace; font-size: .74rem; text-transform: uppercase;
+            letter-spacing: .1em; color: var(--accent-2); margin: 0 0 .6rem; }
+  h1 { font-size: 1.8rem; font-weight: 800; margin: 0 0 .6rem; letter-spacing: -.01em; }
+  .lede { color: var(--ink-2); max-width: 62ch; margin: 0 0 1.6rem; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; font-size: .85rem; color: var(--ink-3); }
+  .meta-row b { color: var(--ink-2); font-weight: 600; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px;
+           background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+           margin: 1.8rem 0 0; }
+  .stat { background: var(--paper); padding: 1rem 1.2rem; }
+  .stat .n { font-family: "Space Mono", monospace; font-weight: 700; font-size: 1.7rem;
+             font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat.bad .n { color: var(--bad); }
+  .stat.good .n { color: var(--good); }
+  .stat .l { font-size: .76rem; color: var(--ink-3); margin-top: .35rem; }
+
+  .sites { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 2.2rem; }
+  .site { position: relative; background: var(--paper); border: 1px solid var(--line);
+          border-radius: 12px; padding: 1.3rem 1.4rem 1.4rem 1.6rem; overflow: hidden; }
+  .site::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+                   background: var(--stripe, var(--good)); }
+  .site-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .site-head h2 { font-size: 1.1rem; margin: 0; }
+  .site-head a.url { font-size: .8rem; color: var(--ink-3); text-decoration: none; }
+  .site-head a.url:hover { color: var(--accent-2); }
+
+  .badges { display: flex; flex-wrap: wrap; gap: .4rem; margin: .7rem 0 .9rem; }
+  .badge { font-family: "Space Mono", monospace; font-size: .72rem; font-weight: 700;
+           padding: .2rem .5rem; border-radius: 5px; white-space: nowrap; }
+  .badge.good { background: var(--good-bg); color: var(--good); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.bad  { background: var(--bad-bg);  color: var(--bad); }
+
+  .trend { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .trend .lbl { font-size: .74rem; color: var(--ink-3); margin-bottom: .5rem;
+                text-transform: uppercase; letter-spacing: .04em; }
+  .trend-row { display: flex; gap: 3px; align-items: flex-end; }
+  .trend-cell { width: 14px; height: 22px; border-radius: 3px; background: var(--good-bg); }
+  .trend-cell.warn { background: var(--warn); }
+  .trend-cell.bad { background: var(--bad); }
+  .trend-cell.good { background: var(--good); opacity: .35; }
+  .trend-empty { color: var(--ink-3); font-size: .82rem; font-style: italic; }
+
+  .how { margin-top: 2.4rem; padding: 1.3rem 1.5rem; background: var(--paper-2);
+         border-radius: 12px; border: 1px solid var(--line); font-size: .86rem; color: var(--ink-2); }
+  .how b { color: var(--ink); }
+  footer.sig { margin-top: 2rem; font-size: .8rem; color: var(--ink-3); text-align: center; }
+  a { color: var(--accent-2); }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 1.4rem; }
+    .site { padding: 1.1rem 1.1rem 1.2rem 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">sitewatch &middot; live dashboard</p>
+    <h1>Fleet status, updated every run.</h1>
+    <p class="lede">This page is rebuilt automatically by the same weekly sweep that checks
+      every site &mdash; no manual step keeps it current.</p>
+    <div class="meta-row">
+      <span><b>Last run</b> <span class="mono">20260913T083935Z</span></span>
+      <span><b>Runs recorded</b> 1</span>
+      <span><b>Schedule</b> Mondays 07:00 UTC</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">4</div><div class="l">sites watched</div></div>
+      <div class="stat"><div class="n">40</div><div class="l">pages crawled</div></div>
+      <div class="stat good"><div class="n">0</div><div class="l">open issue(s)</div></div>
+    </div>
+  </header>
+
+  <div class="sites">
+  
+    
+    <div class="site" style="--stripe: var(--good)">
+      <div class="site-head">
+        <h2>MatchScout</h2>
+        <a class="url mono" href="https://matchscout.co.uk">matchscout.co.uk</a>
+      </div>
+      <div class="badges">
+        <span class="badge good">21 pages</span>
+        <span class="badge good">0 broken</span>
+        <span class="badge good">0 slow</span>
+        <span class="badge good">0 visual</span>
+      </div>
+      <div class="trend">
+        <p class="lbl">Last 1 run(s)</p>
+        
+        <div class="trend-row">
+          
+          <div class="trend-cell good"
+               title="20260913T083935Z: 0 issue(s)"></div>
+          
+        </div>
+        
+      </div>
+    </div>
+  
+    
+    <div class="site" style="--stripe: var(--good)">
+      <div class="site-head">
+        <h2>StrategyAudit</h2>
+        <a class="url mono" href="https://audit.tronk.co.uk">audit.tronk.co.uk</a>
+      </div>
+      <div class="badges">
+        <span class="badge good">4 pages</span>
+        <span class="badge good">0 broken</span>
+        <span class="badge good">0 slow</span>
+        <span class="badge good">0 visual</span>
+      </div>
+      <div class="trend">
+        <p class="lbl">Last 1 run(s)</p>
+        
+        <div class="trend-row">
+          
+          <div class="trend-cell good"
+               title="20260913T083935Z: 0 issue(s)"></div>
+          
+        </div>
+        
+      </div>
+    </div>
+  
+    
+    <div class="site" style="--stripe: var(--good)">
+      <div class="site-head">
+        <h2>SignalMarketplace</h2>
+        <a class="url mono" href="https://signals.tronk.co.uk">signals.tronk.co.uk</a>
+      </div>
+      <div class="badges">
+        <span class="badge good">7 pages</span>
+        <span class="badge good">0 broken</span>
+        <span class="badge good">0 slow</span>
+        <span class="badge good">0 visual</span>
+      </div>
+      <div class="trend">
+        <p class="lbl">Last 1 run(s)</p>
+        
+        <div class="trend-row">
+          
+          <div class="trend-cell good"
+               title="20260913T083935Z: 0 issue(s)"></div>
+          
+        </div>
+        
+      </div>
+    </div>
+  
+    
+    <div class="site" style="--stripe: var(--good)">
+      <div class="site-head">
+        <h2>PrivacyScan</h2>
+        <a class="url mono" href="https://privacyscan.co.uk">privacyscan.co.uk</a>
+      </div>
+      <div class="badges">
+        <span class="badge good">8 pages</span>
+        <span class="badge good">0 broken</span>
+        <span class="badge good">0 slow</span>
+        <span class="badge good">0 visual</span>
+      </div>
+      <div class="trend">
+        <p class="lbl">Last 1 run(s)</p>
+        
+        <div class="trend-row">
+          
+          <div class="trend-cell good"
+               title="20260913T083935Z: 0 issue(s)"></div>
+          
+        </div>
+        
+      </div>
+    </div>
+  
+  </div>
+
+  <div class="how">
+    <b>How to read this.</b> Each site is crawled from its homepage (same-host links, embedded
+    assets, and outbound links all get a status check), then every page is screenshotted and
+    diffed against its committed baseline. The strip under each site is its issue count for the
+    last 20 runs, oldest first &mdash; solid green means clean, amber is 1&ndash;2
+    issues, red is 3 or more. Source, methodology, and how to accept an intentional visual
+    change: <a href="https://github.com/timeyinallout-cloud/sitewatch">github.com/timeyinallout-cloud/sitewatch</a>.
+  </div>
+
+  <footer class="sig">sitewatch</footer>
+</div>
+</body>
+</html>
