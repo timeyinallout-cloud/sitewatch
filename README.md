@@ -50,6 +50,16 @@ make the current state the new baseline. There's no automatic acceptance
 -- a screenshot only becomes the new "correct" state when a human looks at
 the diff and agrees.
 
+**Baselines are environment-pinned.** Chromium's text layout differs by a
+few pixels between OS/font-rendering stacks -- a baseline captured on a
+dev machine drifts against CI's Ubuntu Chromium build by the bottom of a
+long page, and shows up as a full-page false "regression" on every run.
+Always `accept` from a run that happened in the *same* environment future
+runs will compare against -- in practice, that means accepting a GitHub
+Actions run's own screenshots (download the `sitewatch-report` build
+artifact, point `sitewatch accept --reports-dir <downloaded dir>` at it),
+not a local `sitewatch run`.
+
 ## Recurring sweep
 
 `.github/workflows/fleet-sweep.yml` runs the same check every Monday
