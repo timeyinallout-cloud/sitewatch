@@ -17,6 +17,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print(f"No [[site]] entries found in {args.config}", file=sys.stderr)
         return 1
 
+    if args.site:
+        sites = [s for s in sites if s.slug == args.site]
+        if not sites:
+            print(f"No configured site matches --site {args.site!r}", file=sys.stderr)
+            return 1
+
     reports_root = Path(args.reports_dir)
     baseline_dir = Path(args.baseline_dir)
     run_dir, site_reports = run_all(
@@ -97,6 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_p = sub.add_parser("run", parents=[common],
                             help="Crawl + screenshot every configured site and write a report.")
+    run_p.add_argument("--site", default=None, help="Limit to one site slug.")
     run_p.add_argument("--max-pages", type=int, default=60)
     run_p.add_argument("--max-depth", type=int, default=4)
     run_p.add_argument("--fail-on-issues", action="store_true",

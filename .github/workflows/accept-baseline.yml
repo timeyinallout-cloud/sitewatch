@@ -1,0 +1,52 @@
+name: accept-baseline
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "fleet-sweep run ID to accept baselines from"
+        required: true
+      site:
+        description: "Limit to one site slug (blank = every site in that run)"
+        required: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # commits the accepted baseline PNGs back to main
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install sitewatch
+        # No Chromium needed here -- accept only copies files an earlier
+        # fleet-sweep run already screenshotted, it never crawls anything.
+        run: pip install -e .
+
+      - name: Download the sweep's report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sitewatch-report
+          path: reports-to-accept
+          run-id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Accept
+        run: |
+          if [ -n "${{ github.event.inputs.site }}" ]; then
+            sitewatch accept --reports-dir reports-to-accept --site "${{ github.event.inputs.site }}" --show-fingerprints
+          else
+            sitewatch accept --reports-dir reports-to-accept --show-fingerprints
+          fi
+
+      - name: Commit
+        run: |
+          git config user.name "sitewatch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add baselines/
+          git diff --cached --quiet && exit 0
+          git commit -m "sitewatch: accept baselines from run ${{ github.event.inputs.run_id }} (chat-triggered)"
+          git push

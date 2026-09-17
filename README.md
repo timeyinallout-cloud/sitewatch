@@ -89,6 +89,43 @@ manual dispatch. It fails the run (red X, plus email if repo notifications
 are on) when anything's flagged, and uploads the full report + screenshots
 as a 90-day build artifact.
 
+## Interactive chat bot
+
+`sitewatch/web/` is a small FastAPI app (Fly deploy: `sitewatch-bot`) with
+a Fleetboard/Foreman-style chat interface: type "run a sweep", "sweep
+matchscout", "accept 1234567" or "status", or use the buttons, instead of
+running the CLI or waiting for Monday's cron.
+
+**It remote-controls the same two GitHub Actions workflows this README
+already describes -- it does not re-implement the crawl.** "Run a sweep"
+dispatches `fleet-sweep.yml` and polls it to completion; "accept" dispatches
+a new `accept-baseline.yml` (downloads that run's artifact and does exactly
+what `sitewatch accept --reports-dir <downloaded dir>` does, committing the
+result). This keeps GitHub Actions' pinned Ubuntu/Chromium as the one
+environment baselines are ever trusted against — see "Baselines" above for
+why that pinning matters at all.
+
+**Local fallback, explicitly unverified.** If GitHub Actions can't be
+reached, doesn't produce a run, or doesn't finish within 10 minutes, the
+bot runs the crawl itself on its own Chromium (bundled in its Docker image)
+instead of just failing. That result is labelled `origin: "local"`
+everywhere it shows up (chat, dashboard, job detail) and the bot never
+offers "accept" on one — a local run's visual diffs may just be
+font-rendering drift from a different Chromium build, not a real
+regression, so it's only good for "does the crawl work at all right now,"
+not for confirming or denying a visual change.
+
+Deploy:
+```sh
+fly apps create sitewatch-bot
+fly volumes create sitewatch_data --region lhr --size 1
+fly secrets set -a sitewatch-bot \
+  SITEWATCH_USER=<user> SITEWATCH_PASS=<password> \
+  SITEWATCH_GH_REPO=timeyinallout-cloud/sitewatch \
+  SITEWATCH_GH_TOKEN=<fine-grained PAT: Actions read+write on this repo>
+fly deploy -a sitewatch-bot
+```
+
 ## Known limitation
 
 A handful of external sites block generic automated clients (Cloudflare

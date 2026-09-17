@@ -1,0 +1,17 @@
+{% extends "_tronk_base.html" %}
+
+{% block brand %}
+<a class="wordmark" href="/">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <rect x="2.5" y="2.5" width="15" height="15" rx="3" stroke="var(--accent)" stroke-width="1.6"/>
+    <path d="M6 10.5l2.5 2.5L14 7.5" stroke="var(--accent)" stroke-width="1.6" fill="none"/>
+  </svg>
+  sitewatch
+</a>
+{% endblock %}
+
+{% block nav %}
+{% set p = request.url.path %}
+<a href="/" class="{{ 'active' if p == '/' }}">Home</a>
+<a href="/chat" class="{{ 'active' if p == '/chat' }}">Chat</a>
+{% endblock %}

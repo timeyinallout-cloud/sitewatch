@@ -22,7 +22,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "httpx>=0.27"]  # httpx needed for fastapi.testclient.TestClient
+# The interactive chat bot (sitewatch.web) -- kept separate from the base
+# install so CI's `pip install -e .` for `sitewatch run`/`accept` stays
+# lightweight; only the Fly-deployed bot needs these.
+web = ["fastapi>=0.110", "uvicorn>=0.29", "jinja2>=3.1", "python-multipart>=0.0.9"]
 
 [project.scripts]
 sitewatch = "sitewatch.cli:main"

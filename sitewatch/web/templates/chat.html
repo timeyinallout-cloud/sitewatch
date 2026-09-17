@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Chat — sitewatch{% endblock %}
+
+{% block extra_css %}
+  .chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 140px);
+    max-width: var(--measure); margin: 0 auto; padding: 1.5rem clamp(1.1rem, 4vw, 2.4rem); }
+  .chat-thread { flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    gap: 1.4rem; padding: .5rem 0 1rem; }
+  .msg { font-size: .95rem; line-height: 1.6; }
+  .msg p { margin: 0; white-space: pre-line; }
+  .msg--user { align-self: flex-end; max-width: 85%; background: var(--paper-2);
+    border-radius: 14px; padding: .6rem 1rem; }
+  .msg--bot { align-self: flex-start; max-width: 100%; color: var(--ink); }
+  .msg-actions { margin-top: .6rem; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .msg-actions .btn { font-size: .82rem; padding: .4rem .8rem; min-height: 32px; }
+  .chat-hint { color: var(--ink-3); font-size: .88rem; margin: 0 0 1rem; }
+  .chat-input-row { display: flex; gap: .5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .chat-input-row input[type="text"] { flex: 1; }
+{% endblock %}
+
+{% block body %}
+<main class="chat-wrap">
+  <div class="chat-thread" id="chat-thread">
+    {% if not messages %}
+    <p class="chat-hint">Try &ldquo;run a sweep&rdquo;, &ldquo;sweep matchscout&rdquo;,
+      &ldquo;accept &lt;run id&gt;&rdquo;, or &ldquo;status&rdquo;. A sweep tries GitHub
+      Actions first (the environment baselines are trusted against) and only falls back
+      to a local check if that's unreachable &mdash; see the <a href="/">dashboard</a>
+      for the last result.</p>
+    {% endif %}
+    {% for m in messages %}
+    <div class="msg msg--{{ m.role }}"{% if m.job_id %} data-job-id="{{ m.job_id }}"{% endif %}>
+      <p>{{ m.text }}</p>
+      {% if m.actions %}
+      <div class="msg-actions">
+        {% for a in m.actions %}
+          {% if a.url %}
+          <a class="btn" href="{{ a.url }}" target="_blank" rel="noopener">{{ a.label }}</a>
+          {% else %}
+          <button type="button" class="btn" data-action="{{ a.action }}"
+                  data-site="{{ a.site or '' }}" data-run-id="{{ a.run_id or '' }}">{{ a.label }}</button>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <form class="chat-input-row" id="chat-form">
+    <input type="text" id="chat-input" placeholder="Message the bot…" autocomplete="off">
+    <button type="submit" class="btn btn--primary">Send</button>
+  </form>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var thread = document.getElementById("chat-thread");
+  var form = document.getElementById("chat-form");
+  var input = document.getElementById("chat-input");
+  var polling = {};
+
+  function scrollToBottom() { thread.scrollTop = thread.scrollHeight; }
+
+  function msg(role, text, jobId) {
+    var div = document.createElement("div");
+    div.className = "msg msg--" + role;
+    if (jobId) div.setAttribute("data-job-id", jobId);
+    var p = document.createElement("p");
+    p.textContent = text;
+    div.appendChild(p);
+    thread.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function poll(jobId, msgDiv) {
+    if (polling[jobId]) return;
+    polling[jobId] = setInterval(function () {
+      fetch("/jobs/" + jobId)
+        .then(function (r) { return r.json(); })
+        .then(function (job) {
+          if (job.status === "complete" || job.status === "failed") {
+            clearInterval(polling[jobId]);
+            delete polling[jobId];
+            var p = msgDiv.querySelector("p");
+            p.textContent = job.summary || job.error || "Done.";
+            if (job.status === "complete" && job.kind === "sweep" && job.detail) {
+              var a = document.createElement("div");
+              a.className = "msg-actions";
+              var view = document.createElement("a");
+              view.className = "btn"; view.href = "/report/" + jobId; view.target = "_blank";
+              view.textContent = "View report";
+              a.appendChild(view);
+              if (job.detail.origin === "github") {
+                var accept = document.createElement("button");
+                accept.type = "button"; accept.className = "btn";
+                accept.setAttribute("data-action", "accept");
+                accept.setAttribute("data-run-id", String(job.detail.run_id));
+                accept.setAttribute("data-site", "");
+                accept.textContent = "Accept new baselines";
+                a.appendChild(accept);
+              }
+              msgDiv.appendChild(a);
+            }
+          }
+        })
+        .catch(function () {});
+    }, 3000);
+  }
+
+  function sendAction(action, site, runId) {
+    var label = action === "accept" ? ("[accept] run " + runId) : ("[sweep] " + (site || "all sites"));
+    msg("user", label);
+    fetch("/chat/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: action, site: site, run_id: runId }),
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.started && data.job_id) {
+        var b = msg("bot", "Working on it…", data.job_id);
+        poll(data.job_id, b);
+      } else {
+        location.reload();
+      }
+    });
+  }
+
+  thread.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    sendAction(btn.getAttribute("data-action"), btn.getAttribute("data-site"), btn.getAttribute("data-run-id"));
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    msg("user", text);
+    fetch("/chat/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text }),
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.started && data.job_id) {
+        var b = msg("bot", "Working on it…", data.job_id);
+        poll(data.job_id, b);
+      } else {
+        location.reload();
+      }
+    });
+  });
+
+  // resume polling any message left mid-job across a page reload
+  document.querySelectorAll(".msg[data-job-id]").forEach(function (div) {
+    var jobId = div.getAttribute("data-job-id");
+    fetch("/jobs/" + jobId)
+      .then(function (r) { return r.json(); })
+      .then(function (job) {
+        if (job.status === "queued" || job.status === "running") poll(jobId, div);
+      })
+      .catch(function () {});
+  });
+
+  // deep link from the dashboard: /chat?site=X&action=sweep
+  var params = new URLSearchParams(location.search);
+  var qSite = params.get("site"), qAction = params.get("action");
+  if (qAction === "sweep") {
+    sendAction("sweep", qSite || "", "");
+    history.replaceState(null, "", "/chat");
+  }
+
+  scrollToBottom();
+})();
+</script>
+{% endblock %}

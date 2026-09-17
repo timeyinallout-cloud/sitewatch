@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}sitewatch{% endblock %}
+
+{% block extra_css %}
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 2rem clamp(1.1rem, 4vw, 2.4rem); }
+  .card { border: 1px solid var(--rule); border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.2rem; }
+  .site-row { display: flex; align-items: center; justify-content: space-between;
+    padding: .5rem 0; border-bottom: 1px solid var(--rule); }
+  .site-row:last-child { border-bottom: none; }
+  .muted { color: var(--ink-3); font-size: .9rem; }
+  .btn-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+{% endblock %}
+
+{% block body %}
+<main class="wrap">
+  <h1>sitewatch</h1>
+  <p class="muted">Crawl, link-check and visual-regression watch for the live site fleet.
+    Sweeps run in GitHub Actions (the environment baselines are trusted against) unless
+    that's unreachable, in which case a local fallback runs instead and is labelled as such.</p>
+
+  <div class="card">
+    <h2>Last sweep</h2>
+    {% if last_sweep %}
+      <p>{{ last_sweep.finished_at }} UTC &mdash; {{ last_sweep.summary }}</p>
+      {% if last_detail and last_detail.origin == "local" %}
+      <p class="muted">Ran locally, not via GitHub Actions &mdash; treat any visual-regression
+        finding in it as unconfirmed until a GitHub Actions sweep agrees.</p>
+      {% endif %}
+      <div class="btn-row">
+        <a class="btn" href="/chat">Open chat</a>
+      </div>
+    {% else %}
+      <p class="muted">No sweep has run yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Sites</h2>
+    {% for s in sites %}
+    <div class="site-row">
+      <span>{{ s.name }}</span>
+      <a class="btn" href="/chat?action=sweep&site={{ s.slug }}">Sweep this site</a>
+    </div>
+    {% else %}
+    <p class="muted">No sites configured.</p>
+    {% endfor %}
+    <div class="btn-row">
+      <a class="btn btn--primary" href="/chat?action=sweep">Sweep everything</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

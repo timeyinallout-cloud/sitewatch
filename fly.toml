@@ -1,0 +1,43 @@
+# Fly.io deployment. First time:
+#   fly auth login
+#   fly apps create sitewatch-bot   # "sitewatch" may already be taken globally
+#   fly volumes create sitewatch_data --region lhr --size 1
+#   fly secrets set SITEWATCH_USER=<user> SITEWATCH_PASS=<password> \
+#     SITEWATCH_GH_TOKEN=<PAT with actions:write+read on this repo> \
+#     SITEWATCH_GH_REPO=timeyinallout-cloud/sitewatch
+#   fly deploy
+#
+# This is the chat/dashboard front end for the existing fleet-sweep /
+# accept-baseline GitHub Actions workflows (see sweep_ops.py) -- it remote-
+# controls them rather than replacing them, and only falls back to running
+# Chromium in this container (local_ops.py) when GitHub Actions can't be
+# reached. That fallback path is why Chromium is bundled here at all; a
+# result from it is explicitly unverified against the real CI baselines.
+app = "sitewatch-bot"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[mounts]
+  source = "sitewatch_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1024mb"

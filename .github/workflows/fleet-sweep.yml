@@ -3,6 +3,10 @@ on:
   schedule:
     - cron: "0 7 * * 1"      # Mondays 07:00 UTC -- an hour after tronk-audit's sweep
   workflow_dispatch:
+    inputs:
+      site:
+        description: "Limit to one site slug (blank = every configured site)"
+        required: false
 
 jobs:
   sweep:
@@ -24,7 +28,11 @@ jobs:
       - name: Run the sweep
         # Exits non-zero when anything's flagged -- that's the notification:
         # a red run in Actions (and email, if repo notifications are on).
-        run: sitewatch run --max-pages 60 --max-depth 4 --fail-on-issues
+        # `site` is only set on a workflow_dispatch triggered from the chat
+        # bot's "sweep <site>" command; the scheduled run always covers everything.
+        run: |
+          sitewatch run --max-pages 60 --max-depth 4 --fail-on-issues \
+            ${{ github.event.inputs.site && format('--site {0}', github.event.inputs.site) || '' }}
 
       - name: Post summary
         if: always()
