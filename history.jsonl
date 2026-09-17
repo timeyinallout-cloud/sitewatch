@@ -10,3 +10,4 @@
 {"run_id": "20260917T135611Z", "timestamp": "2026-09-17T13:58:20.790019+00:00", "site": "strategyaudit", "pages": 10, "broken": 0, "slow": 0, "visual_regressions": 2, "render_failures": 0}
 {"run_id": "20260917T135611Z", "timestamp": "2026-09-17T13:58:20.790019+00:00", "site": "signalmarketplace", "pages": 7, "broken": 0, "slow": 0, "visual_regressions": 0, "render_failures": 0}
 {"run_id": "20260917T135611Z", "timestamp": "2026-09-17T13:58:20.790019+00:00", "site": "privacyscan", "pages": 8, "broken": 0, "slow": 0, "visual_regressions": 0, "render_failures": 0}
+{"run_id": "20260917T153246Z", "timestamp": "2026-09-17T15:32:48.043806+00:00", "site": "matchscout", "pages": 1, "broken": 1, "slow": 0, "visual_regressions": 0, "render_failures": 0}
