@@ -27,7 +27,7 @@ def page_slug(url: str) -> str:
     # Long, ID-bearing, or heavily-parameterised URLs still need a unique,
     # short filename -- hash the full path+query in alongside a readable prefix.
     if len(base) > 80:
-        digest = hashlib.sha1((path + "?" + parsed.query).encode()).hexdigest()[:8]
+        digest = hashlib.sha1((path + "?" + parsed.query).encode(), usedforsecurity=False).hexdigest()[:8]
         base = base[:60] + "-" + digest
     return base
 

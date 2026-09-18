@@ -181,7 +181,7 @@ def render_dashboard(run_id: str, site_reports: list[SiteReport],
         for r in site_reports
     )
 
-    env = Environment(loader=BaseLoader())
+    env = Environment(loader=BaseLoader(), autoescape=True)
     html = env.from_string(_TEMPLATE).render(
         run_id=run_id, sites=site_reports, trends=trends, total_runs=total_runs,
         total_pages=total_pages, total_issues=total_issues, max_trend=MAX_TREND_RUNS,

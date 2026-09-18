@@ -129,7 +129,7 @@ _TEMPLATE = r"""<!doctype html>
 
 
 def render(run_id: str, sites: list[SiteReport], out_path: Path) -> Path:
-    env = Environment(loader=BaseLoader())
+    env = Environment(loader=BaseLoader(), autoescape=True)
     template = env.from_string(_TEMPLATE)
     html = template.render(run_id=run_id, sites=sites)
     out_path.parent.mkdir(parents=True, exist_ok=True)
