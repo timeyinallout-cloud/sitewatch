@@ -3,6 +3,12 @@
 [[site]]
 name = "MatchScout"
 base_url = "https://matchscout.co.uk"
+# Live sports data: fixtures/results/expected-goals numbers on these pages
+# change every day (sometimes every hour) with no code change involved --
+# pixel-diffing them flags a "regression" on essentially every run, which
+# is noise, not a signal. Static pages (about, privacy, etc.) are still
+# fully visual-diffed. See sitewatch's own README/memory for why.
+visual_exclude = ["/", "/?division=*", "/all", "/all?*", "/european", "/european?*"]
 
 [[site]]
 name = "StrategyAudit"

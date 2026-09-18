@@ -39,7 +39,11 @@ class SiteReport:
 def run_site(site: Site, run_dir: Path, baseline_dir: Path,
              max_pages: int = 60, max_depth: int = 4) -> SiteReport:
     crawl_result = crawl(site, max_pages=max_pages, max_depth=max_depth)
-    html_urls = [p.url for p in crawl_result.pages if p.is_html and isinstance(p.status, int) and p.status < 400]
+    html_urls = [
+        p.url for p in crawl_result.pages
+        if p.is_html and isinstance(p.status, int) and p.status < 400
+        and not site.excludes_visual(p.url)
+    ]
 
     site_run_dir = run_dir / site.slug
     site_baseline_dir = baseline_dir / site.slug
