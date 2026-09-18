@@ -15,8 +15,10 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 
-from . import chat, jobs
+from . import chat, jobs, sentry_setup
 from .deps import require_viewer, templates
+
+sentry_setup.init()
 
 
 @asynccontextmanager
