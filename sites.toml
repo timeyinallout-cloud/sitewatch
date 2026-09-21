@@ -9,6 +9,11 @@ base_url = "https://matchscout.co.uk"
 # is noise, not a signal. Static pages (about, privacy, etc.) are still
 # fully visual-diffed. See sitewatch's own README/memory for why.
 visual_exclude = ["/", "/?division=*", "/all", "/all?*", "/european", "/european?*"]
+# gamblingtherapy.org (linked from /responsible-gambling) is confirmed
+# genuinely flaky on their end -- a real 502 seen 2026-09-21 -- not
+# something fixable on our side. See link_ignore_hosts's own docstring
+# in config.py.
+link_ignore_hosts = ["www.gamblingtherapy.org"]
 
 [[site]]
 name = "StrategyAudit"
@@ -29,3 +34,6 @@ base_url = "https://privacyscan.co.uk"
 # (28/55 -> 2?/55, sector ordering, the updated date) refreshing between
 # scans, not a rendering bug.
 visual_exclude = ["/research"]
+# Same gamblingtherapy.org flakiness as MatchScout above -- confirmed
+# genuinely slow/timing out on 2026-09-19 from this site too.
+link_ignore_hosts = ["www.gamblingtherapy.org"]

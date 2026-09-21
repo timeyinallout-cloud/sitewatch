@@ -34,7 +34,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
     latest = reports_root / "latest.html"
     latest.write_text(report_path.read_text())
 
-    total_broken = sum(len(r.crawl.broken_links) + len(r.crawl.broken_assets) for r in site_reports)
+    total_broken = sum(r.blocking_broken_count for r in site_reports)
     total_visual = sum(len(r.visual_regressions) for r in site_reports)
     total_failed = sum(len(r.render_failures) for r in site_reports)
     print(f"sitewatch run {run_dir.name}: "

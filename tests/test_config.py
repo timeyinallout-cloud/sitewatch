@@ -53,3 +53,28 @@ class TestLoadSites:
         path.write_text('[[site]]\nname = "X"\nbase_url = "https://x.example"\n')
         sites = load_sites(path)
         assert sites[0].visual_exclude == ()
+
+    def test_loads_link_ignore_hosts_when_present(self, tmp_path):
+        path = tmp_path / "sites.toml"
+        path.write_text(
+            '[[site]]\nname = "X"\nbase_url = "https://x.example"\n'
+            'link_ignore_hosts = ["www.gamblingtherapy.org"]\n'
+        )
+        sites = load_sites(path)
+        assert sites[0].link_ignore_hosts == ("www.gamblingtherapy.org",)
+
+
+class TestIgnoresLinkHost:
+    def test_no_hosts_ignores_nothing(self):
+        site = Site(name="X", base_url="https://x.example")
+        assert site.ignores_link_host("https://www.gamblingtherapy.org/") is False
+
+    def test_matching_host_is_ignored(self):
+        site = Site(name="X", base_url="https://x.example",
+                    link_ignore_hosts=("www.gamblingtherapy.org",))
+        assert site.ignores_link_host("https://www.gamblingtherapy.org/page") is True
+
+    def test_non_matching_host_is_not_ignored(self):
+        site = Site(name="X", base_url="https://x.example",
+                    link_ignore_hosts=("www.gamblingtherapy.org",))
+        assert site.ignores_link_host("https://other.example/") is False

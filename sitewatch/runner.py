@@ -27,6 +27,15 @@ class SiteReport:
     render_failures: list[str] = field(default_factory=list)
 
     @property
+    def blocking_broken_count(self) -> int:
+        """Same as len(crawl.broken_links) + len(crawl.broken_assets), minus
+        findings on a link_ignore_hosts domain -- see Site.ignores_link_host
+        for why. Used only for the --fail-on-issues exit code; the report
+        and dashboard still show every finding, ignored or not."""
+        issues = self.crawl.broken_links + self.crawl.broken_assets
+        return sum(1 for i in issues if not self.site.ignores_link_host(i.target_url))
+
+    @property
     def visual_regressions(self) -> list[PageDiff]:
         return [d for d in self.page_diffs
                 if not d.result.is_new and d.result.diff_image_path is not None]
