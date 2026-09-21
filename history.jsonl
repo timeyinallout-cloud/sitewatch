@@ -16,3 +16,7 @@
 {"run_id": "20260918T180155Z", "timestamp": "2026-09-18T18:03:35.803362+00:00", "site": "strategyaudit", "pages": 10, "broken": 0, "slow": 0, "visual_regressions": 0, "render_failures": 0}
 {"run_id": "20260918T180155Z", "timestamp": "2026-09-18T18:03:35.803362+00:00", "site": "signalmarketplace", "pages": 7, "broken": 0, "slow": 0, "visual_regressions": 0, "render_failures": 0}
 {"run_id": "20260918T180155Z", "timestamp": "2026-09-18T18:03:35.803362+00:00", "site": "privacyscan", "pages": 8, "broken": 0, "slow": 1, "visual_regressions": 0, "render_failures": 0}
+{"run_id": "20260921T103027Z", "timestamp": "2026-09-21T10:32:05.281666+00:00", "site": "matchscout", "pages": 21, "broken": 1, "slow": 0, "visual_regressions": 0, "render_failures": 0}
+{"run_id": "20260921T103027Z", "timestamp": "2026-09-21T10:32:05.281666+00:00", "site": "strategyaudit", "pages": 10, "broken": 0, "slow": 0, "visual_regressions": 0, "render_failures": 0}
+{"run_id": "20260921T103027Z", "timestamp": "2026-09-21T10:32:05.281666+00:00", "site": "signalmarketplace", "pages": 7, "broken": 0, "slow": 0, "visual_regressions": 0, "render_failures": 0}
+{"run_id": "20260921T103027Z", "timestamp": "2026-09-21T10:32:05.281666+00:00", "site": "privacyscan", "pages": 8, "broken": 0, "slow": 1, "visual_regressions": 1, "render_failures": 0}
