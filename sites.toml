@@ -21,3 +21,11 @@ base_url = "https://signals.tronk.co.uk"
 [[site]]
 name = "PrivacyScan"
 base_url = "https://privacyscan.co.uk"
+# /research is a standing, periodically-rescanned compliance index --
+# the headline stats and "updated <date>" line change on their own
+# schedule with no code change involved, same live-data pattern as
+# MatchScout's fixtures above. Confirmed real 2026-09-21: a flagged
+# "3.1% visual regression" was genuinely just the panel's own numbers
+# (28/55 -> 2?/55, sector ordering, the updated date) refreshing between
+# scans, not a rendering bug.
+visual_exclude = ["/research"]
