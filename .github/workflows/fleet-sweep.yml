@@ -1,7 +1,12 @@
 name: fleet-sweep
 on:
   schedule:
-    - cron: "0 7 * * 1"      # Mondays 07:00 UTC -- an hour after tronk-audit's sweep
+    # Off the exact hour, ~an hour after tronk-audit's own new 06:16 slot
+    # -- see tronk-audit's fleet-sweep.yml comment for why (GitHub's
+    # documented top-of-hour scheduling delay, confirmed against this
+    # fleet's real history: this exact workflow's own Monday sweep never
+    # fired on schedule at all until manually dispatched, more than once).
+    - cron: "24 7 * * 1"
   workflow_dispatch:
     inputs:
       site:
